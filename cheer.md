@@ -156,7 +156,7 @@ HTML5新增的语义化标签：`header nav aside main footer section article me
 
 题外内容：
 
-![浏览器解析渲染机制.png](.\images\浏览器解析渲染机制.png)
+![浏览器解析渲染机制.png](images/浏览器解析渲染机制.png)
 
 - 解析HTML，生成DOM树；解析CSS，生成CSSOM树。
 - 将DOM树和CSSOM树结合，生成渲染树。
@@ -557,8 +557,17 @@ Vue父子组件挂载顺序的一般规律是：父组件先创建，然后子�
 
 
 
+题外内容：
+
+[Vue2的官方解释](https://v2.cn.vuejs.org/v2/guide/list.html#v-for-object)
+
+[Vue3的官方解释](https://cn.vuejs.org/guide/essentials/list.html#v-for-with-v-if)
+
+
+
 ## 7、Vue组件样式污染？
 
 Vue组件样式污染是指一个组件的样式影响到了另一个组件的样式，导致页面显示不正确或不一致的问题。这个问题通常发生在使用全局样式或者相同的类名时。
 
 最常用的是使用 `scoped` 属性。`scoped` 属性可以让组件的样式只作用于当前组件，而不会影响其他组件。这是通过给每个组件添加一个唯一的属性，然后在样式中使用属性选择器来实现的。
+
