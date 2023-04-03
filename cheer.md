@@ -584,11 +584,11 @@ Vue组件样式污染是指一个组件的样式影响到了另一个组件的�
 
 
 
-## 9、讲一下vue的keep-alive组件？什么时候会用到？
+## 9、Vue的keep-alive组件？什么时候会用到？
 
 `keep-alive` 是Vue的一个内置组件，它的功能是在多个组件间动态切换时缓存被移除的组件实例，从而避免重复渲染和销毁组件，提供性能和用户体验。
 
-`keep-alive` 组件有两个常用的prop属性：`include` 和 `exclude`，它们可以用来定制那些组件需要被缓存，哪些不需要。这两个属性的值可以是一个字符串、一个正则表达式或者一个数组，它们会根据组件的 `name` 选项进行匹配。
+`keep-alive` 组件有两个常用的prop属性：`include` 和 `exclude`，它们可以用来定制哪些组件需要被缓存，哪些不需要。这两个属性的值可以是一个字符串、一个正则表达式或者一个数组，它们会根据组件的 `name` 选项进行匹配。
 
 `keep-alive` 组件还有一个 `max` 属性，可以用来限制可被缓存的最大组件实例数。当缓存的实例数量超过指定的最大书香时，最久没有被访问的缓存实例将被销毁，以便为新的实例腾出空间。
 
@@ -620,7 +620,7 @@ immediate：表示是否立即执行监听函数，如果为true，那么在watc
 
 
 
-## 12、讲解slot？有什么作用？
+## 12、Vue的slot？有什么作用？
 
 slot是Vue中的一种内容分发的机制，可以让父组件在子组件的模板中插入内容。
 
@@ -765,7 +765,7 @@ const myDirective = {
 
 
 
-## 17、Vue中的Event Bus
+## 17、Vue的Event Bus
 
 **Vue中Event Bus的原理？**
 
@@ -885,3 +885,69 @@ Vue生命周期钩子大致可以分为以下几类：
 因为在Vue中，组件时可以被多次创建和销毁的，如果组件的data是一个对象，那么所有的组件实例就会共享同一个data对象，这样就会导致数据的污染和混乱。
 
 为了避免这个问题，Vue要求组件的data必须是一个函数，这样每个组件实例就会有自己独立的data对象，互不影响。这也符合了组件化开发的原则，让每个组件都有自己的状态和逻辑，提高了代码的可维护性和可复用性。
+
+
+
+## 23、Vue组件中data可以用箭头函数吗？
+
+**可以用，但是不建议用。**
+
+原因是，箭头函数的this指向的是定义时的上下文，而不是调用时的上下文。在Vue组件中，data必须是一个函数，而且这个函数必须返回一个对象，这样才能保证每个组件实例都有自己独立的数据。如果使用箭头函数，那么this就不会指向组件实例，而是指向**全局对象**或者**undefined**，导致无法访问组件的其他属性或方法。
+
+如果一定要使用箭头函数，那么你可以通过第一个参数来访问组件实例。
+
+```typescript
+export default {
+  data: (vm) => ({
+    message: vm.myProp
+  })
+}
+```
+
+
+
+## 24、Vue的响应式原理？
+
+Vue的响应式原理是指Vue能够自动检测数据的变化，并更新视图。Vue的响应式原理主要分为两个版本，Vue2和Vue3。
+
+在Vue2中，响应式原理是通过使用ES5的 `Object.defineProperty()` 方法来实现的。`Object.defineProperty()` 可以让我们对对象的属性进行 `getter` 和 `setter` 的转化，从而在属性被访问和修改时通知变更。Vue会在初始化实例时对data对象上的所有属性执行 `getter` 和 `setter` 的转化，并创建一个 `watcher` 实例来收集依赖和触发更新。
+
+在Vue3中，响应式原理是通过使用ES6的 `Proxy` 对象来实现的。`Proxy` 可以让我们拦截对象的所有操作，包括属性的访问、修改、删除、枚举等，并在操作发生时执行自定义的逻辑。Vue会在创建组件时为data对象创建一个响应式代理对象，并使用effect函数来收集依赖和触发更新。
+
+
+
+## 25、Vue的编译过程？
+
+1. 将模板字符串转换为AST（抽象语法树），这是一个用对象表示HTML结构和指令的树形结构。Vue使用了一些正则表达式来匹配和解析标签、属性、文本等元素，并创建相应的AST节点。
+2. 将AST转换为render函数，这是一个用JavaScript代码表示虚拟DOM（VDOM）的函数。Vue使用了一些辅助函数来生成VDOM节点，并处理指令、插值表达式、事件绑定等逻辑。
+3. 调用render函数，得到VDOM，这是一个用JavaScript对象表示真实DOM的轻量级结构。VDOM可以高效地比较和更新DOM，提高渲染性能。
+
+编译的过程可以在运行时或者打包时进行。运行时编译是指在浏览器中动态地将模板编译为render函数，这需要引入编译器模块，增加了文件体积。打包时编译是指在构建工具中预先将模板编译成render函数，这样可以减少文件体积和运行时开销。
+
+
+
+## 26、computed和watch的实现原理？
+
+`computed` 和 `watch` 的实现原理都是基于 `Watcher类` 的，`Watcher类` 是Vue中用来管理依赖收集和派发更新的核心类。每个 `computed` 属性都会生成一个对应的 `Watcher` 实例，称为 `computed-watcher`。每个 `watch` 属性也会生成一个对应的 `Watcher` 实例，称为 `user-watcher`。除此之外，还有一个 `render-watcher`，用来监听组件渲染时用到的数据，并在数据变化时重新渲染组件。
+
+`computed-watcher` 和 `user-watcher` 都有一个value属性和get方法。value属性存储着计算或侦听的值，get方法用来执行计算或侦听的函数，并返回赋值给value。不同的是，`computed-watcher` 还有一个 `lazy` 属性和一个 `dirty`属性。`lazy` 属性表示该watcher是否需要延迟求值，`dirty` 属性表示该watcher是否需要重新求值。`computed-watcher` 在初始化时会将 `lazy` 设置为true，`dirty` 设为true，表示不立即求值，而是等到视图渲染时才求值。
+
+当视图渲染时，`render-watcher` 会遍历组件中用到的所有数据，并将自己添加到这些数据的订阅者列表中。如果遇到 `computed` 属性，就会调用其get方法，并触发其内部依赖数据的get方法。这样，`computed-watcher` 就会将自己添加到其依赖数据的订阅者列表中，并将 `dirty` 设为false，表示已经求过值了。同时，`render-watcher` 也会将自己添加到 `computed-watcher` 的订阅者列表中，表示视图依赖于该 `computed` 属性。
+
+
+
+## 27、computed是怎么收集依赖的？
+
+`computed` 的依赖收集是基于Vue的响应式系统的，它涉及到三个核心类：Dep、Watcher和Observer 。
+
+Dep类是用来管理订阅者（Watcher）的，每个响应式数据都会有一个Dep实例，它有一个 subs数组，用来存储所有订阅了该数据的Watcher 。Dep类还有一个静态属性target，用来指向当前正在求值的Watcher。
+
+Watcher类是用来封装观察者函数的，每个 `computed` 属性都会对应一个Watcher实例，称为computed-watcher。Watcher类有一个value属性，用来存储计算或侦听的值，还有一个get方法，用来执行计算或侦听的函数，并返回赋值给value。Watcher类还有一个update方法，用来通知自己的订阅者更新。
+
+Observer类是用来实现数据响应式化的，它会遍历对象的每个属性，并使用`Object.defineProperty` 方法将其转换为getter/setter 。在getter中，会调用`Dep.target.addDep` 方法，将当前的Watcher添加到该数据的订阅者列表中 。在setter中，会调用 `dep.notify` 方法，通知所有订阅者更新。
+
+`computed` 的依赖收集主要发生在两个时机：**初始化时和数据变化时**。
+
+初始化时，computed-watcher会将自己的 `lazy` 属性设为true，表示需要延迟求值，并将 `dirty` 属性设为true，表示需要重新求值。当视图渲染时，render-watcher会遍历组件中用到的所有数据，并将自己添加到这些数据的订阅者列表中。如果遇到 `computed` 属性，就会调用其get方法，并触发其内部依赖数据的get方法。这样，computed-watcher就会将自己添加到其依赖数据的订阅者列表中，并将 `dirty` 设为false，表示已经求过值了。同时，render-watcher也会将自己添加到computed-watcher的订阅者列表中，表示视图依赖于该 `computed` 属性。
+
+数据变化时，如果 `computed` 属性依赖的数据发生变化，就会通知所有订阅者更新。这时，computed-watcher会将 `dirty` 设为true，表示需要重新求值，并通知自己的订阅者更新。这样，render-watcher就会重新渲染视图，并再次调用 `computed` 属性的get方法，在这个过程中重新计算并缓存 `computed` 属性的值。
