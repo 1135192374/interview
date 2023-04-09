@@ -1168,8 +1168,8 @@ Vue的数据变化和视图更新的机制是这样的：Vue在初始化实例�
 
    路由有两种模式，分别为 hash 模式和 history 模式。默认模式是 hash 模式。
 
-   - hash 模式：在 URL 后面添加 #，例如 http://www.example.com/#/home。
-   - history 模式：利用 HTML5 History API，在不刷新页面的情况下更改 URL，例如 http://www.example.com/home。
+   - hash 模式：在 URL 后面添加 #，例如 `http://www.example.com/#/home`。
+   - history 模式：利用 HTML5 History API，在不刷新页面的情况下更改 URL，例如 `http://www.example.com/home`。
 
    在 vue-router 中，我们可以通过 mode 属性来设置路由模式。默认的 mode 值为 hash。
 
@@ -1466,3 +1466,142 @@ Vuex页面刷新数据丢失的问题是由于Vuex的数据是保存在浏览器
    - 服务器负载较高，因为需要在服务器端进行大量的计算和渲染；
    - 开发难度较大，需要掌握服务器端的技术栈，并且需要编写复杂的服务器端渲染代码。
 5. 举例说明Vue SSR的应用场景：Vue SSR适用于需要提高网页首屏加载速度、改善SEO优化效果和支持服务端数据预取的场景，如电商、新闻、博客等类型的网站。
+
+
+
+## 48、能说下vue-router中常用的hash和history路由模式实现原理吗？
+
+1. 理解 hash 和 history 路由模式的区别
+   - hash 路由模式基于浏览器 URL 中的 hash 部分（即#后面的内容）来实现路由功能。
+   - history 路由模式使用 HTML5 中新增的 History API 来实现路由功能，可以使用 pushState 和 replaceState 方法改变 URL。
+2. 了解 hash 路由模式的实现原理
+   - 在 hash 路由模式中，路由信息会被保存在浏览器 URL 的 hash 部分中。
+   - 当 URL 发生变化时，通过监听 hashchange 事件来检测 URL 的变化，并根据变化的 hash 值来匹配对应的路由信息。
+3. 了解 history 路由模式的实现原理
+   - 在 history 路由模式中，路由信息会被保存在浏览器 URL 的路径部分中。
+   - 当 URL 发生变化时，通过监听 popstate 事件来检测 URL 的变化，并根据变化的路径来匹配对应的路由信息。
+   - 为了避免页面刷新时出现 404 错误，需要在服务器端配置路由规则，并将所有请求都指向前端应用的入口文件。
+
+
+
+## 49、Vue框架怎么实现对象和数组的监听？
+
+通过Vue数据双向绑定。
+
+Vue 数据双向绑定主要是指：数据变化更新视图，视图变化更新数据。
+
+- 输入框内容变化时，Data 中的数据同步变化。即 View => Data 的变化。
+- Data 中的数据变化时，文本节点的内容同步变化。即 Data => View 的变化。
+
+其中，View 变化更新 Data ，可以通过事件监听的方式来实现，所以 Vue 的数据双向绑定的工作主要是如何根据 Data 变化更新 View。
+
+Vue 主要通过以下 4 个步骤来实现数据双向绑定的：
+
+- 实现一个监听器 Observer：对数据对象进行遍历，包括子属性对象的属性，利用 Object.defineProperty() 对属性都加上 setter 和 getter。这样的话，给这个对象的某个值赋值，就会触发 setter，那么就能监听到了数据变化。
+- 实现一个解析器 Compile：解析 Vue 模板指令，将模板中的变量都替换成数据，然后初始化渲染页面视图，并将每个指令对应的节点绑定更新函数，添加监听数据的订阅者，一旦数据有变动，收到通知，调用更新函数进行数据更新。
+- 实现一个订阅者 Watcher：Watcher 订阅者是 Observer 和 Compile 之间通信的桥梁 ，主要的任务是订阅 Observer 中的属性值变化的消息，当收到属性值变化的消息时，触发解析器 Compile 中对应的更新函数。
+- 实现一个订阅器 Dep：订阅器采用 发布-订阅 设计模式，用来收集订阅者 Watcher，对监听器 Observer 和 订阅者 Watcher 进行统一管理。
+
+![Vue-49-数据双向绑定](images/Vue-49-数据双向绑定.png)
+
+**原文链接：**
+
+https://blog.csdn.net/q95548854/article/details/98617043
+
+
+
+## 50、Vue怎么用vm.$set()解决对象新增属性不能响应的问题？
+
+```javascript
+export function set (target: Array<any> | Object, key: any, val: any): any {
+  // target 为数组
+  if (Array.isArray(target) && isValidArrayIndex(key)) {
+    // 修改数组的长度, 避免索引>数组长度导致splcie()执行有误
+    target.length = Math.max(target.length, key)
+    // 利用数组的splice变异方法触发响应式
+    target.splice(key, 1, val)
+    return val
+  }
+  // key 已经存在，直接修改属性值
+  if (key in target && !(key in Object.prototype)) {
+    target[key] = val
+    return val
+  }
+  const ob = (target: any).__ob__
+  // target 本身就不是响应式数据, 直接赋值
+  if (!ob) {
+    target[key] = val
+    return val
+  }
+  // 对属性进行响应式处理
+  defineReactive(ob.value, key, val)
+  ob.dep.notify()
+  return val
+}
+```
+
+阅读以上源码可知，vm.$set 的实现原理是：
+
+- 如果目标是数组，直接使用数组的 splice 方法触发相应式；
+
+- 如果目标是对象，会先判读属性是否存在、对象是否是响应式，最终如果要对属性进行响应式处理，则是通过调用 defineReactive 方法进行响应式处理（ defineReactive 方法就是 Vue 在初始化对象时，给对象属性采用 Object.defineProperty 动态添加 getter 和 setter 的功能所调用的方法）
+
+
+
+**原文链接：**
+
+https://blog.csdn.net/q95548854/article/details/98617043
+
+
+
+## 51、Vue中的key有什么作用？
+
+key是虚拟DOM对象的标识。在Vue中，Key作为Vue中对比算法的标识，在数据修改后，可以通过Key进行这个唯一标识进行对比虚拟DOM，从而决定对节点的重新加载以及复用。
+
+Key是虚拟DOM对象的标识，当数据发生变化时，Vue会根据【新数据】生成【新的虚拟DOM】, 随后Vue进行【新虚拟DOM】与【旧虚拟DOM】的差异比较。
+
+Key的对比规则：
+
+- 旧虚拟DOM中找到了与新虚拟DOM相同的key：
+  - 若虚拟DOM中内容没变，直接使用之前的真实DOM。
+  - 若虚拟DOM中内容变了， 则生成新的真实DOM，随后替换掉页面中之前的真实DOM。
+- 旧虚拟DOM中未找到与新虚拟DOM相同的key
+  - 创建新的真实DOM，随后渲染到到页面。
+
+
+
+## 52、你有对Vue项目进行哪些优化？
+
+- 代码层面的优化
+  - v-if 和 v-show 区分使用场景
+  - computed 和 watch 区分使用场景
+  - v-for 遍历必须为 item 添加 key，且避免同时使用 v-if
+  - 长列表性能优化
+  - 事件的销毁
+  - 图片资源懒加载
+  - 路由懒加载
+  - 第三方插件的按需引入
+  - 优化无限列表性能
+  - 服务端渲染 SSR or 预渲染
+
+- Webpack 层面的优化
+  - Webpack 对图片进行压缩
+  - 减少 ES6 转为 ES5 的冗余代码
+  - 提取公共代码
+  - 模板预编译
+  - 提取组件的 CSS
+  - 优化 SourceMap
+  - 构建结果输出分析
+  - Vue 项目的编译优化
+
+- 基础的 Web 技术的优化
+  - 开启 gzip 压缩
+  - 浏览器缓存
+  - CDN 的使用
+  - 使用 Chrome Performance 查找性能瓶颈
+
+
+
+**原文链接：**
+
+https://blog.csdn.net/q95548854/article/details/98617043
